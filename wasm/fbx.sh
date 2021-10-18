@@ -9,7 +9,7 @@ clang++ \
     -fvisibility=hidden \
     -mthread-model single \
     -fno-threadsafe-statics \
-    -fno-exceptions \
+    -fwasm-exceptions \
     -std=c++11 \
     -I../../../../code/AssetLib/FBX \
     -I../../../../include \
