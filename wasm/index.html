@@ -1,0 +1,42 @@
+
+<script type="module">
+/*
+  async function init() {
+    const { instance } = await WebAssembly.instantiateStreaming(
+      fetch("./add.wasm")
+    );
+    console.log(instance.exports.add(4, 1));
+  }
+  init();
+  
+*/  
+    import {test} from './build/hello/hello.js';
+    
+    let utf8decoder = new TextDecoder( "utf-8" );
+    let mem = new WebAssembly.Memory( {'initial':32} );
+    //imports['memory'] = 
+
+    async function init(){
+    const response = await fetch("./build/hello/hello.wasm");
+    const buffer = await response.arrayBuffer();
+    const obj = await WebAssembly.instantiate(buffer,{
+        BTJSRT:{
+            log:(str,len,f1,f2,f3)=>{
+                let arr = mem.buffer.slice( str, str+len );
+                console.log( utf8decoder.decode(arr),f1,f2,f3 );
+            }
+        },
+        wasi_unstable:{
+            fd_close:()=>{console.log('close');},
+            fd_seek:()=>{console.log('seek');},
+            fd_fdstat_get:()=>{console.log('get');},
+            fd_write:()=>{console.log('write');}
+        },
+        env: {
+            memory:mem,
+        }
+    });
+    console.log(obj.instance.exports.test());  // "3"  
+    }
+    init();
+</script>
