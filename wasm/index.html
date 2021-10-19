@@ -10,20 +10,23 @@
   init();
   
 */  
-    import {test} from './build/hello/hello.js';
+    //import {test} from './build/hello/hello.js';
     
     let utf8decoder = new TextDecoder( "utf-8" );
     let mem = new WebAssembly.Memory( {'initial':32} );
     //imports['memory'] = 
 
     async function init(){
-    const response = await fetch("./build/hello/hello.wasm");
+    const response = await fetch("./build/assimp.wasm");
     const buffer = await response.arrayBuffer();
     const obj = await WebAssembly.instantiate(buffer,{
         BTJSRT:{
             log:(str,len,f1,f2,f3)=>{
                 let arr = mem.buffer.slice( str, str+len );
                 console.log( utf8decoder.decode(arr),f1,f2,f3 );
+            },
+            logs:(str)=>{
+              console.log(str);
             }
         },
         wasi_unstable:{
