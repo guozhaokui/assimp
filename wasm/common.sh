@@ -23,9 +23,14 @@ clang++ \
     -std=c++11 \
     -I../../../code \
     -I../../../include \
+    -I../../../contrib \
+    -I../../../contrib/unzip \
+    -I../../../contrib/zlib \
+    -I../../../ \
     -Wall \
     --sysroot=${WASI_SDK_HOME}/share/wasi-sysroot \
     ../../../code/Common/*.cpp \
+    ../../../code/Material/*.cpp \
     
 
 llvm-ar \
