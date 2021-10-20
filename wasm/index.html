@@ -29,8 +29,8 @@
               console.log(str);
             }
         },
-        wasi_unstable:{
-            fd_close:()=>{console.log('close');},
+        wasi_snapshot_preview1:{
+          fd_close:()=>{console.log('close');},
             fd_seek:()=>{console.log('seek');},
             fd_fdstat_get:()=>{console.log('get');},
             fd_write:()=>{console.log('write');}
