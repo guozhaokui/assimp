@@ -54,6 +54,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream> // ostringstream
 #include <memory> // shared_ptr
 
+#define throw
+#define try     if(true)
+#define catch(...) if(false)
+
 namespace Assimp {
 // AddP70<type> helpers... there's no usable pattern here,
 // so all are defined as separate functions.

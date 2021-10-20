@@ -116,9 +116,9 @@ aiScene *BaseImporter::ReadFile(Importer *pImp, const std::string &pFile, IOSyst
 
     } catch( const std::exception &err ) {
         // extract error description
-        m_ErrorText = err.what();
-        ASSIMP_LOG_ERROR(err.what());
-        m_Exception = std::current_exception();
+        //m_ErrorText = err.what();
+        //ASSIMP_LOG_ERROR(err.what());
+        //m_Exception = std::current_exception();
         return nullptr;
     }
 

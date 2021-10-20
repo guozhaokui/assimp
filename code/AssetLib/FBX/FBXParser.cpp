@@ -63,6 +63,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iostream>
 
+#define throw
+#define try     if(true)
+#define catch(...) if(false)
+
 using namespace Assimp;
 using namespace Assimp::FBX;
 

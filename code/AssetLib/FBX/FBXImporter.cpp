@@ -58,6 +58,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/importerdesc.h>
 #include <assimp/Importer.hpp>
 
+#define throw
+#define try     if(true)
+#define catch(...) if(false)
+
 namespace Assimp {
 
 template <>

@@ -51,7 +51,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "FBXUtil.h"
 #include "FBXDocumentUtil.h"
 #include "FBXProperties.h"
-
+#define throw
+#define try     if(true)
+#define catch(...) if(false)
 
 namespace Assimp {
 namespace FBX {

@@ -62,6 +62,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory>
 #include <utility>
 
+#define throw
+#define try     if(true)
+#define catch(...) if(false)
+
 namespace Assimp {
 namespace FBX {
 
@@ -127,7 +131,7 @@ const Object* LazyObject::Get(bool dieOnError)
     // prevent recursive calls
     flags |= BEING_CONSTRUCTED;
 
-    try {
+    //try {
         // this needs to be relatively fast since it happens a lot,
         // so avoid constructing strings all the time.
         const char* obtype = key.begin();
@@ -209,6 +213,7 @@ const Object* LazyObject::Get(bool dieOnError)
         else if (!strncmp(obtype,"AnimationCurveNode",length)) {
             object.reset(new AnimationCurveNode(id,element,name,doc));
         }
+    /*
     }
     catch(std::exception& ex) {
         flags &= ~BEING_CONSTRUCTED;
@@ -224,6 +229,7 @@ const Object* LazyObject::Get(bool dieOnError)
         }
         return nullptr;
     }
+    */
 
     if (!object.get()) {
         //DOMError("failed to convert element to DOM object, class: " + classtag + ", name: " + name,&element);

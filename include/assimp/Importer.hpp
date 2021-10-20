@@ -61,6 +61,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <exception>
 
+#define throw
+#define try   if(true)
+#define catch(...) if(false)
+
+
 namespace Assimp {
 // =======================================================================
 // Public interface to Assimp

@@ -56,6 +56,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/StringUtils.h>
 
+#define throw
+#define try     if(true)
+#define catch(...) if(false)
+
 namespace Assimp {
 namespace FBX {
 
@@ -127,7 +131,7 @@ namespace {
 AI_WONT_RETURN void TokenizeError(const std::string& message, size_t offset) AI_WONT_RETURN_SUFFIX;
 AI_WONT_RETURN void TokenizeError(const std::string& message, size_t offset)
 {
-    throw DeadlyImportError("FBX-Tokenize", Util::GetOffsetText(offset), message);
+    //throw DeadlyImportError("FBX-Tokenize", Util::GetOffsetText(offset), message);
 }
 
 
@@ -472,10 +476,10 @@ void TokenizeBinary(TokenList& output_tokens, const char* input, size_t length)
     }
     catch (const DeadlyImportError& e)
     {
-        if (!is64bits && (length > std::numeric_limits<std::uint32_t>::max())) {
-            throw DeadlyImportError("The FBX file is invalid. This may be because the content is too big for this older version (", ai_to_string(version), ") of the FBX format. (", e.what(), ")");
-        }
-        throw;
+        //if (!is64bits && (length > std::numeric_limits<std::uint32_t>::max())) {
+        //    throw DeadlyImportError("The FBX file is invalid. This may be because the content is too big for this older version (", ai_to_string(version), ") of the FBX format. (", e.what(), ")");
+        //}
+        //throw;
     }
 }
 

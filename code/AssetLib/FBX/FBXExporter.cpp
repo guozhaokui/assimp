@@ -69,6 +69,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_set>
 #include <numeric>
 
+#define throw
+#define try     if(true)
+#define catch(...) if(false)
+
 // RESOURCES:
 // https://code.blender.org/2013/08/fbx-binary-file-format-specification/
 // https://wiki.blender.org/index.php/User:Mont29/Foundation/FBX_File_Structure

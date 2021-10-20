@@ -47,6 +47,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef AI_VERSION_H_INC
 #define AI_VERSION_H_INC
 
+#define throw
+#define try   if(true)
+#define catch(...) if(false)
+
 #include <assimp/defs.h>
 
 #ifdef __cplusplus

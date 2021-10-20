@@ -56,6 +56,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/Exceptional.h>
 #include <assimp/DefaultLogger.hpp>
 
+#define throw
+#define try     if(true)
+#define catch(...) if(false)
+
 namespace Assimp {
 namespace FBX {
 
