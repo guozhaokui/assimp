@@ -6,10 +6,25 @@
 #define __BTWASM_SYSCALL_NAME(name) \
 	__attribute__((__import_module__("BTJSRT"), __import_name__(#name)))
 
+bool DoTheImportThing(const char *pFile);
+
+extern "C" {
+// 导入函数
+void jslogs(const char *str) __BTWASM_SYSCALL_NAME(logs);
+void jslog(const char *str, int len, float f1, float f2, float f3) __BTWASM_SYSCALL_NAME(log);
+
+void WASM_EXP test() {
+    DoTheImportThing("");
+    jslogs("a");
+}
+}
+
 
 bool DoTheImportThing( const char* pFile) {
   // Create an instance of the Importer class
-/*
+    aiNode* aa = new aiNode();
+  jslogs((char*)aa );
+            /*
   Assimp::Importer importer;
 
   // And have it read the given file with some example postprocessing
@@ -35,15 +50,4 @@ bool DoTheImportThing( const char* pFile) {
 }
 
 
-extern "C"{
-	// 导入函数
-	void jslogs(const char* str) __BTWASM_SYSCALL_NAME(logs);
-	void jslog(const char* str, int len, float f1, float f2, float f3) __BTWASM_SYSCALL_NAME(log);
-
-	void WASM_EXP test(){
-        DoTheImportThing("");
-        jslogs("a");
-	}
-
-}
 
