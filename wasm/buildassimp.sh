@@ -23,8 +23,10 @@ wasm-ld        \
     --lto-O3 --no-entry -lc -lc++ -lc++abi -lc-printscan-long-double \
     --import-memory \
     --export-dynamic \
+    --allow-undefined-file=../jslib.imports \
     -L${WASI_SDK_HOME}/share/wasi-sysroot/lib/wasm32-wasi \
     ./AssetLib/FBX/fbx.a \
+    ./zip/zip.a \
     ./Common/Common.a \
     ./PostProcessing/PostProcessing.a \
     *.o\

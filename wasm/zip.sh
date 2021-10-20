@@ -1,25 +1,24 @@
 #!/usr/bin/env bash
 
-mkdir -p build/AssetLib/FBX
-pushd build/AssetLib/FBX
+mkdir -p build/zip
+pushd build/zip
 
-clang++ \
+clang \
     -c \
     --target=wasm32 -nostdlib -O3 -DWEBASM -DBT_USE_DOUBLE_PRECISION -D__wasi__ -DNDEBUG \
     -fvisibility=hidden \
     -mthread-model single \
     -fno-threadsafe-statics \
     -fwasm-exceptions \
-    -std=c++11 \
-    -I../../../../code/AssetLib/FBX \
-    -I../../../../include \
+    -I../../../contrib/zlib \
     -Wall \
     --sysroot=${WASI_SDK_HOME}/share/wasi-sysroot \
-    ../../../../code/AssetLib/FBX/*.cpp \
-    
+    ../../../contrib/zip/src/*.c \
+    ../../../contrib/zlib/*.c \
+    ../../../contrib/unzip/*.c \
 
 llvm-ar \
-    rc ./fbx.a \
+    rc ./zip.a \
     *.o
 
 popd

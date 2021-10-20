@@ -22,10 +22,9 @@ void WASM_EXP test() {
 
 bool DoTheImportThing( const char* pFile) {
   // Create an instance of the Importer class
-    aiNode* aa = new aiNode();
-  jslogs((char*)aa );
-            /*
   Assimp::Importer importer;
+  jslogs((char*)&importer );
+            /*
 
   // And have it read the given file with some example postprocessing
   // Usually - if speed is not the most important aspect for you - you'll
