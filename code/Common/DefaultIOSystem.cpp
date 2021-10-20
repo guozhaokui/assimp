@@ -57,6 +57,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #    include <windows.h>
 #endif
 
+#ifdef WEBASM
+extern "C" {
+    // 导入函数
+    char *realpath(const char *path, char *resolved_path);
+}
+#endif
+
 using namespace Assimp;
 
 #ifdef _WIN32

@@ -1,6 +1,9 @@
 #include <assimp/Importer.hpp>      // C++ importer interface
 #include <assimp/scene.h>           // Output data structure
 #include <assimp/postprocess.h>     // Post processing flags
+#include <assimp/IOStream.hpp>
+#include <assimp/IOSystem.hpp>
+
 
 #define WASM_EXP __attribute__((visibility("default")))
 #define __BTWASM_SYSCALL_NAME(name) \
@@ -19,6 +22,45 @@ void WASM_EXP test() {
 }
 }
 
+// My own implementation of IOStream
+class MyIOStream : public Assimp::IOStream {
+  friend class MyIOSystem;
+
+protected:
+  // Constructor protected for private usage by MyIOSystem
+  MyIOStream();
+
+public:
+  ~MyIOStream();
+  size_t Read( void* pvBuffer, size_t pSize, size_t pCount) {  }
+  size_t Write( const void* pvBuffer, size_t pSize, size_t pCount) {  }
+  aiReturn Seek( size_t pOffset, aiOrigin pOrigin) {  }
+  size_t Tell() const {  }
+  size_t FileSize() const {  }
+  void Flush () {  }
+};
+
+// Fisher Price - My First Filesystem
+class MyIOSystem : public Assimp::IOSystem {
+  MyIOSystem() {  }
+  ~MyIOSystem() {  }
+
+  // Check whether a specific file exists
+  bool Exists( const std::string& pFile) const {
+  }
+
+  // Get the path delimiter character we'd like to see
+  char GetOsSeparator() const {
+    return '/';
+  }
+
+  //  and finally a method to open a custom stream
+  Assimp::IOStream* Open( const std::string& pFile, const std::string& pMode) {
+    return new MyIOStream(  );
+  }
+
+  void Close( Assimp::IOStream* pFile) { delete pFile; }
+};
 
 bool DoTheImportThing( const char* pFile) {
   // Create an instance of the Importer class
