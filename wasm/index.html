@@ -1,71 +1,246 @@
-
 <script type="module">
-/*
-  async function init() {
-    const { instance } = await WebAssembly.instantiateStreaming(
-      fetch("./add.wasm")
-    );
-    console.log(instance.exports.add(4, 1));
-  }
-  init();
-  
-*/  
-    //import {test} from './build/hello/hello.js';
-    
-    let utf8decoder = new TextDecoder( "utf-8" );
-    let mem = new WebAssembly.Memory( {'initial':32} );
-    //imports['memory'] = 
-
-    async function init(){
-    const response = await fetch("./build/assimp.wasm");
-    const buffer = await response.arrayBuffer();
-    const obj = await WebAssembly.instantiate(buffer,{
-        BTJSRT:{
-            log:(str,len,f1,f2,f3)=>{
-                let arr = mem.buffer.slice( str, str+len );
-                console.log( utf8decoder.decode(arr),f1,f2,f3 );
-            },
-            logs:(str)=>{
-              console.log(str);
-            },
-            realpath(path, resolved_path){
-            }
-        },
-        wasi_snapshot_preview1:{
-          fd_close:()=>{debugger;},
-            fd_seek:()=>{debugger;},
-            fd_fdstat_get:()=>{debugger;},
-            fd_prestat_get:()=>{debugger;},
-            fd_prestat_dir_name:()=>{debugger;},
-            fd_write:()=>{debugger;},
-            proc_exit:()=>{debugger;},
-            path_open:()=>{debugger;},
-            path_filestat_get:()=>{debugger;},
-            path_unlink_file:()=>{debugger;},
-            path_remove_directory:()=>{debugger;},
-            path_create_directory:()=>{debugger;},
-            fd_fdstat_set_flags:()=>{debugger;},
-            fd_read:()=>{debugger;},
-            environ_sizes_get:()=>{debugger;},
-            environ_get:()=>{debugger;},
-            clock_time_get:()=>{debugger;},
-            __wasm_lpad_context:()=>{}
-        },
-        env: {
-            memory:mem,
-            __cxa_begin_catch:()=>{debugger;},
-            __cxa_end_catch:()=>{debugger;},
-            __cxa_throw:()=>{debugger;},
-            __cxa_rethrow:()=>{debugger;},
-            __cxa_allocate_exception:()=>{debugger;},
-            __cxa_free_exception:()=>{debugger;},
-            __multi3:()=>{debugger;},
-            __lttf2:()=>{debugger;},
-            realpath:()=>{debugger;},
-            _Unwind_CallPersonality:()=>{debugger;},
-          }
-    });
-    console.log(obj.instance.exports.test());  // "3"  
+  /*
+    async function init() {
+      const { instance } = await WebAssembly.instantiateStreaming(
+        fetch("./add.wasm")
+      );
+      console.log(instance.exports.add(4, 1));
     }
     init();
+    
+  */
+  //import {test} from './build/hello/hello.js';
+
+  var WASI_ESUCCESS = 0;
+  var WASI_EBADF = 8;
+  var WASI_EINVAL = 28;
+  var WASI_ENOSYS = 52;
+  var WASI_STDOUT_FILENO = 1;
+
+  class barebonesWASI {
+    moduleInstanceExports = null;
+    mem = null;
+
+    setModuleInstance(instance, mem) {
+      this.moduleInstanceExports = instance.exports;
+      this.mem = mem;
+    }
+
+    getModuleMemoryDataView() {
+      // call this any time you'll be reading or writing to a module's memory 
+      // the returned DataView tends to be dissaociated with the module's memory buffer at the will of the WebAssembly engine 
+      // cache the returned DataView at your own peril!!
+      return new DataView(this.mem.buffer);
+    }
+
+    fd_prestat_get(fd, bufPtr) {
+      debugger;
+      return WASI_EBADF;
+    }
+
+    fd_prestat_dir_name(fd, pathPtr, pathLen) {
+      debugger;
+      return WASI_EINVAL;
+    }
+
+    environ_sizes_get(environCount, environBufSize) {
+      debugger;
+      var view = this.getModuleMemoryDataView();
+
+      view.setUint32(environCount, 0, !0);
+      view.setUint32(environBufSize, 0, !0);
+
+      return WASI_ESUCCESS;
+    }
+
+    environ_get(environ, environBuf) {
+      debugger;
+      return WASI_ESUCCESS;
+    }
+
+    args_sizes_get(argc, argvBufSize) {
+      debugger;
+      var view = this.getModuleMemoryDataView();
+
+      view.setUint32(argc, 0, !0);
+      view.setUint32(argvBufSize, 0, !0);
+
+      return WASI_ESUCCESS;
+    }
+
+    args_get(argv, argvBuf) {
+      debugger;
+      return WASI_ESUCCESS;
+    }
+
+    fd_fdstat_get(fd, bufPtr) {
+      debugger;
+      var view = this.getModuleMemoryDataView();
+
+      view.setUint8(bufPtr, fd);
+      view.setUint16(bufPtr + 2, 0, !0);
+      view.setUint16(bufPtr + 4, 0, !0);
+
+      function setBigUint64(byteOffset, value, littleEndian) {
+
+        var lowWord = value;
+        var highWord = 0;
+
+        view.setUint32(littleEndian ? 0 : 4, lowWord, littleEndian);
+        view.setUint32(littleEndian ? 4 : 0, highWord, littleEndian);
+      }
+
+      setBigUint64(bufPtr + 8, 0, !0);
+      setBigUint64(bufPtr + 8 + 8, 0, !0);
+
+      return WASI_ESUCCESS;
+    }
+
+    fd_write(fd, iovs, iovsLen, nwritten) {
+      debugger;
+      var view = this.getModuleMemoryDataView();
+
+      var written = 0;
+      var bufferBytes = [];
+
+      function getiovs(iovs, iovsLen) {
+        // iovs* -> [iov, iov, ...]
+        // __wasi_ciovec_t {
+        //   void* buf,
+        //   size_t buf_len,
+        // }
+        var buffers = Array.from({ length: iovsLen }, function (_, i) {
+          var ptr = iovs + i * 8;
+          var buf = view.getUint32(ptr, !0);
+          var bufLen = view.getUint32(ptr + 4, !0);
+
+          return new Uint8Array(this.mem.buffer, buf, bufLen);
+        });
+
+        return buffers;
+      }
+
+      var buffers = getiovs(iovs, iovsLen);
+      function writev(iov) {
+
+        for (var b = 0; b < iov.byteLength; b++) {
+
+          bufferBytes.push(iov[b]);
+        }
+
+        written += b;
+      }
+
+      buffers.forEach(writev);
+
+      if (fd === WASI_STDOUT_FILENO) console.log(String.fromCharCode.apply(null, bufferBytes));
+
+      view.setUint32(nwritten, written, !0);
+
+      return WASI_ESUCCESS;
+    }
+
+    poll_oneoff(sin, sout, nsubscriptions, nevents) {
+      debugger;
+      return WASI_ENOSYS;
+    }
+
+    proc_exit(rval) {
+      debugger;
+      return WASI_ENOSYS;
+    }
+
+    fd_read(fd) {
+      debugger;
+    }
+
+    fd_close(fd) {
+      debugger;
+      return WASI_ENOSYS;
+    }
+
+    fd_seek(fd, offset, whence, newOffsetPtr) {
+      debugger;
+    }
+
+    fd_close(fd) {
+      debugger;
+      return WASI_ENOSYS;
+    }
+
+    path_open(p) {
+      debugger;
+    }
+
+    path_filestat_get(p1, p2) { debugger; }
+    path_unlink_file(p1, p2) { debugger; }
+    path_remove_directory(p1, p2) { debugger; }
+    path_create_directory(p1, p2) { debugger; }
+    fd_fdstat_set_flags(p1, p2) { debugger; }
+    clock_time_get(p1, p2) { debugger; }
+  }
+
+
+
+
+  var wasiPolyfill = new barebonesWASI();
+  let utf8decoder = new TextDecoder("utf-8");
+  let mem = new WebAssembly.Memory({ 'initial': 32 });
+  //imports['memory'] = 
+
+  async function init() {
+    const response = await fetch("./build/assimp.wasm");
+    const buffer = await response.arrayBuffer();
+    const obj = await WebAssembly.instantiate(buffer, {
+      BTJSRT: {
+        log: (str, len, f1, f2, f3) => {
+          let arr = mem.buffer.slice(str, str + len);
+          console.log(utf8decoder.decode(arr), f1, f2, f3);
+        },
+        logs: (str) => {
+          console.log(str);
+        },
+        realpath(path, resolved_path) {
+        }
+      },
+      wasi_snapshot_preview1: {
+        fd_close: wasiPolyfill.fd_close.bind(wasiPolyfill),
+        fd_seek: wasiPolyfill.fd_seek.bind(wasiPolyfill),
+        fd_fdstat_get: wasiPolyfill.fd_fdstat_get.bind(wasiPolyfill),
+        fd_prestat_get: wasiPolyfill.fd_prestat_get.bind(wasiPolyfill),
+        fd_prestat_dir_name: wasiPolyfill.fd_prestat_dir_name.bind(wasiPolyfill),
+        fd_write: wasiPolyfill.fd_write.bind(wasiPolyfill),
+        proc_exit: wasiPolyfill.proc_exit.bind(wasiPolyfill),
+        path_open: wasiPolyfill.path_open.bind(wasiPolyfill),
+        path_filestat_get: wasiPolyfill.path_filestat_get.bind(wasiPolyfill),
+        path_unlink_file: wasiPolyfill.path_unlink_file.bind(wasiPolyfill),
+        path_remove_directory: wasiPolyfill.path_remove_directory.bind(wasiPolyfill),
+        path_create_directory: wasiPolyfill.path_create_directory.bind(wasiPolyfill),
+        fd_fdstat_set_flags: wasiPolyfill.fd_fdstat_set_flags.bind(wasiPolyfill),
+        fd_read: wasiPolyfill.fd_read.bind(wasiPolyfill),
+        clock_time_get: wasiPolyfill.clock_time_get.bind(wasiPolyfill),
+        environ_sizes_get: wasiPolyfill.environ_sizes_get.bind(wasiPolyfill),
+        environ_get: wasiPolyfill.environ_get.bind(wasiPolyfill),
+        __wasm_lpad_context: () => { }
+      },
+      env: {
+        memory: mem,
+        __cxa_begin_catch: () => { debugger; },
+        __cxa_end_catch: () => { debugger; },
+        __cxa_throw: () => { debugger; },
+        __cxa_rethrow: () => { debugger; },
+        __cxa_allocate_exception: () => { debugger; },
+        __cxa_free_exception: () => { debugger; },
+        __multi3: () => { debugger; },
+        __lttf2: () => { debugger; },
+        realpath: () => { debugger; },
+        _Unwind_CallPersonality: () => { debugger; },
+      }
+    });
+
+    wasiPolyfill.setModuleInstance(obj.instance, mem);
+
+    console.log(obj.instance.exports.test());  // "3"  
+  }
+  init();
 </script>

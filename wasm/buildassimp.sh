@@ -5,7 +5,7 @@ pushd build
 
 clang++ -c\
     --sysroot ${WASI_SDK_HOME}/share/wasi-sysroot \
-    --target=wasm32 -nostdlib -O3 -DWEBASM -DBT_USE_DOUBLE_PRECISION -D__wasi__ -DNDEBUG  \
+    --target=wasm32 -nostdlib -g -DWEBASM -DBT_USE_DOUBLE_PRECISION -D__wasi__ -DNDEBUG  \
     -mthread-model single \
     -fno-threadsafe-statics \
     -fvisibility=hidden \
@@ -18,9 +18,9 @@ clang++ -c\
 # --strip-all 会去掉符号
 #    --strip-debug \ -S
 #    --compress-relocations \
-
+# --lto-O3 --no-entry -lc -lc++ -lc++abi -lc-printscan-long-double \
 wasm-ld        \
-    --lto-O3 --no-entry -lc -lc++ -lc++abi -lc-printscan-long-double \
+     --no-entry -lc -lc++ -lc++abi -lc-printscan-long-double \
     --import-memory \
     --export-dynamic \
     --allow-undefined-file=../jslib.imports \
