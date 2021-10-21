@@ -32,15 +32,38 @@
             }
         },
         wasi_snapshot_preview1:{
-          fd_close:()=>{console.log('close');},
-            fd_seek:()=>{console.log('seek');},
-            fd_fdstat_get:()=>{console.log('get');},
-            fd_write:()=>{console.log('write');},
+          fd_close:()=>{debugger;},
+            fd_seek:()=>{debugger;},
+            fd_fdstat_get:()=>{debugger;},
+            fd_prestat_get:()=>{debugger;},
+            fd_prestat_dir_name:()=>{debugger;},
+            fd_write:()=>{debugger;},
+            proc_exit:()=>{debugger;},
+            path_open:()=>{debugger;},
+            path_filestat_get:()=>{debugger;},
+            path_unlink_file:()=>{debugger;},
+            path_remove_directory:()=>{debugger;},
+            path_create_directory:()=>{debugger;},
+            fd_fdstat_set_flags:()=>{debugger;},
+            fd_read:()=>{debugger;},
+            environ_sizes_get:()=>{debugger;},
+            environ_get:()=>{debugger;},
+            clock_time_get:()=>{debugger;},
             __wasm_lpad_context:()=>{}
         },
         env: {
             memory:mem,
-        }
+            __cxa_begin_catch:()=>{debugger;},
+            __cxa_end_catch:()=>{debugger;},
+            __cxa_throw:()=>{debugger;},
+            __cxa_rethrow:()=>{debugger;},
+            __cxa_allocate_exception:()=>{debugger;},
+            __cxa_free_exception:()=>{debugger;},
+            __multi3:()=>{debugger;},
+            __lttf2:()=>{debugger;},
+            realpath:()=>{debugger;},
+            _Unwind_CallPersonality:()=>{debugger;},
+          }
     });
     console.log(obj.instance.exports.test());  // "3"  
     }

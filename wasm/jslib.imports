@@ -6,3 +6,6 @@
  __cxa_throw
  __cxa_rethrow
  _Unwind_CallPersonality
+ __multi3
+ __lttf2
+ realpath
