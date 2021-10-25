@@ -1,3 +1,4 @@
+<script async type="text/javascript" src="polyfill.js"></script> 
 <script type="module">
   /*
     async function init() {
@@ -192,15 +193,33 @@
     const response = await fetch("./build/assimp.wasm");
     const buffer = await response.arrayBuffer();
     const obj = await WebAssembly.instantiate(buffer, {
-      BTJSRT: {
+      JSRT: {
         log: (str, len, f1, f2, f3) => {
           let arr = mem.buffer.slice(str, str + len);
           console.log(utf8decoder.decode(arr), f1, f2, f3);
         },
         logs: (str) => {
-          console.log(str);
+          //console.log(str);
+          console.log(UTF8ToString(str));
         },
         realpath(path, resolved_path) {
+        },
+        loadFile(f){
+          debugger;
+        },
+        seek(offset,origin){
+          debugger;
+        },
+        tell(){
+          debugger;
+          return 0;
+        },
+        filesize(){
+          debugger
+          return 0;
+        },
+        flush(){
+          debugger;
         }
       },
       wasi_snapshot_preview1: {
@@ -237,10 +256,19 @@
         _Unwind_CallPersonality: () => { debugger; },
       }
     });
+    //polyfill
+    setInstance(obj.instance,mem)
 
     wasiPolyfill.setModuleInstance(obj.instance, mem);
+    console.log(obj.instance.exports.test());  // "3" 
+    
 
-    console.log(obj.instance.exports.test());  // "3"  
+    // 
+    const fbx = await fetch("./res/xiepian.fbx");
+    const fbxbuff = await fbx.arrayBuffer();
+    debugger;
+
+
   }
   init();
 </script>

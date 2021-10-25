@@ -5,17 +5,21 @@
 #include <assimp/Importer.hpp> // C++ importer interface
 
 #define WASM_EXP __attribute__((visibility("default")))
-#define __BTWASM_SYSCALL_NAME(name) \
-    __attribute__((__import_module__("BTJSRT"), __import_name__(#name)))
+#define __WASM_SYSCALL_NAME(name) \
+    __attribute__((__import_module__("JSRT"), __import_name__(#name)))
 
 bool DoTheImportThing(const char *pFile);
 
 extern "C" {
 // 导入函数
-void jslogs(const char *str) __BTWASM_SYSCALL_NAME(logs);
-void jslog(const char *str, int len, float f1, float f2, float f3) __BTWASM_SYSCALL_NAME(log);
+void jslogs(const char *str) __WASM_SYSCALL_NAME(logs);
+void jslog(const char *str, int len, float f1, float f2, float f3) __WASM_SYSCALL_NAME(log);
 
-void jsLoadFile(const char* f) __BTWASM_SYSCALL_NAME(loadFile);;
+void jsLoadFile(const char* f) __WASM_SYSCALL_NAME(loadFile);;
+aiReturn jsSeek(size_t pOffset, aiOrigin pOrigin) __WASM_SYSCALL_NAME(seek);
+size_t jsTell() __WASM_SYSCALL_NAME(tell);
+size_t jsFileSize() __WASM_SYSCALL_NAME(filesize);
+void jsFlush() __WASM_SYSCALL_NAME(flush);
 
 void WASM_EXP test() {
     DoTheImportThing("/test/tt.fbx");
@@ -25,8 +29,8 @@ void* _malloc(int sz) {
     return malloc(sz);
 }
 
-void _delete(void* ptr) {
-    delete ptr;
+void _free(void* ptr) {
+    free(ptr);
 }
 }
 
@@ -56,20 +60,26 @@ public:
     }
 
     size_t Write(const void *pvBuffer, size_t pSize, size_t pCount) {
+        return 0;
     }
 
     aiReturn Seek(size_t pOffset, aiOrigin pOrigin) {
       jslogs((char*)555);
+      return jsSeek(pOffset, pOrigin);
     }
 
     size_t Tell() const {
       jslogs((char*)333);
+        return jsTell();
     }
+
     size_t FileSize() const {
       jslogs((char*)444);
+      return jsFileSize();
     }
 
     void Flush() {
+        jsFlush();
     }
 };
 
