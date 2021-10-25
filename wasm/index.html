@@ -1,4 +1,4 @@
-<script async type="text/javascript" src="polyfill.js"></script> 
+<script async type="text/javascript" src="webpolyfill.js"></script> 
 <script type="module">
   /*
     async function init() {
@@ -258,16 +258,22 @@
     });
     //polyfill
     setInstance(obj.instance,mem)
+    let exports = obj.instance.exports;
 
     wasiPolyfill.setModuleInstance(obj.instance, mem);
-    console.log(obj.instance.exports.test());  // "3" 
+    //TEST
+    let pp = exports._malloc(16)
+    stringToUTF8('aaa',pp, lengthBytesUTF8('aaa')+1);
+    console.log(UTF8ToString(pp));
     
-
     // 
     const fbx = await fetch("./res/xiepian.fbx");
     const fbxbuff = await fbx.arrayBuffer();
+    let ptr = exports._malloc(fbxbuff.byteLength);
+    cpyUint8(new Uint8Array(fbxbuff), ptr);
     debugger;
 
+    console.log(obj.instance.exports.test());  // "3" 
 
   }
   init();

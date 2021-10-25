@@ -25,11 +25,12 @@ void WASM_EXP test() {
     DoTheImportThing("/test/tt.fbx");
 }
 
-void* _malloc(int sz) {
-    return malloc(sz);
+void* WASM_EXP _malloc(int sz) {
+    void* ptr = malloc(sz);
+    return ptr;
 }
 
-void _free(void* ptr) {
+void WASM_EXP _free(void* ptr) {
     free(ptr);
 }
 }
@@ -64,17 +65,17 @@ public:
     }
 
     aiReturn Seek(size_t pOffset, aiOrigin pOrigin) {
-      jslogs((char*)555);
+      jslogs("seek");
       return jsSeek(pOffset, pOrigin);
     }
 
     size_t Tell() const {
-      jslogs((char*)333);
+      jslogs("tell");
         return jsTell();
     }
 
     size_t FileSize() const {
-      jslogs((char*)444);
+      jslogs("FileSize");
       return jsFileSize();
     }
 
@@ -93,7 +94,7 @@ public:
 
     // Check whether a specific file exists
     virtual bool Exists(const char *pFile) const {
-        jslogs((char *)22);
+        jslogs("Exists()");
         return true;
     }
 
@@ -104,6 +105,8 @@ public:
 
     //  and finally a method to open a custom stream
     virtual Assimp::IOStream *Open(const char *pFile, const char *pMode = "rb") {
+        jslogs("Open()");
+        jslogs(pFile);
         return new MyIOStream(pFile);
     }
 
@@ -116,8 +119,6 @@ bool DoTheImportThing(const char *pFile) {
 
     // the import process will now use this implementation to access any file
     // importer.ReadFile( pFile, SomeFlag | SomeOtherFlag);
-
-    jslogs((char *)&importer);
 
     // put my custom IO handling in place
     importer.SetIOHandler(new MyIOSystem());
