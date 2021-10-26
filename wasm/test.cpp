@@ -4,7 +4,8 @@
 #include <assimp/IOSystem.hpp>
 #include <assimp/Importer.hpp> // C++ importer interface
 
-#define WASM_EXP __attribute__((visibility("default")))
+#define WASM_EXP(e)  __attribute__((export_name(#e)))
+
 #define __WASM_SYSCALL_NAME(name) \
     __attribute__((__import_module__("JSRT"), __import_name__(#name)))
 
@@ -21,18 +22,24 @@ size_t jsTell() __WASM_SYSCALL_NAME(tell);
 size_t jsFileSize() __WASM_SYSCALL_NAME(filesize);
 void jsFlush() __WASM_SYSCALL_NAME(flush);
 
-void WASM_EXP test() {
+void test() WASM_EXP(test) {
     DoTheImportThing("/test/tt.fbx");
 }
 
-void* WASM_EXP _malloc(int sz) {
+void*  _malloc(int sz) WASM_EXP(_malloc) {
     void* ptr = malloc(sz);
     return ptr;
 }
 
-void WASM_EXP _free(void* ptr) {
+void _free(void* ptr) WASM_EXP(_free) {
     free(ptr);
 }
+
+void ttta() WASM_EXP(TTTA);
+}
+
+void ttta() {
+
 }
 
 // My own implementation of IOStream
