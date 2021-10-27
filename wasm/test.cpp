@@ -2,6 +2,7 @@
 #include <assimp/scene.h> // Output data structure
 #include <assimp/IOStream.hpp>
 #include <assimp/IOSystem.hpp>
+#include <assimp/DefaultLogger.hpp>
 #include <assimp/Importer.hpp> // C++ importer interface
 
 #define WASM_EXP(e)  __attribute__((export_name(#e)))
@@ -10,6 +11,9 @@
     __attribute__((__import_module__("JSRT"), __import_name__(#name)))
 
 bool DoTheImportThing(const char *pFile);
+
+void* data=nullptr;
+int dataLength=0;
 
 extern "C" {
 // 导入函数
@@ -35,12 +39,13 @@ void _free(void* ptr) WASM_EXP(_free) {
     free(ptr);
 }
 
-void ttta() WASM_EXP(TTTA);
+void setData(int ptr, int length) WASM_EXP(setData) {
+    data =(void*) ptr;
+    dataLength=length;
+}
 }
 
-void ttta() {
 
-}
 
 // My own implementation of IOStream
 class MyIOStream : public Assimp::IOStream {
@@ -50,11 +55,16 @@ public:
     std::string file;
     char* pBuffer;
     int length;
+private:
+    char* pCurPtr;
+    int   leftData;
 protected:
     // Constructor protected for private usage by MyIOSystem
     MyIOStream(const char* pf) {
       file.assign(pf);
       jsLoadFile(pf);
+      leftData = dataLength;
+      pCurPtr=(char*)data;
     }
 
 public:
@@ -63,8 +73,15 @@ public:
 
     // psize 是每个元素的大小。pcount是多少个元素
     size_t Read(void *pvBuffer, size_t pSize, size_t pCount) {
-      jslogs((char*)pvBuffer);
-      return 0;
+      //jslogs((char*)pvBuffer);
+      //return 0;
+      int n = pSize*pCount;
+      int rlen = n<leftData?n:leftData;
+      memcpy(pvBuffer, pCurPtr, rlen);
+      pCurPtr+=rlen;
+      leftData-=rlen;
+      if(leftData<0)leftData=0;
+      return rlen;
     }
 
     size_t Write(const void *pvBuffer, size_t pSize, size_t pCount) {
@@ -83,7 +100,8 @@ public:
 
     size_t FileSize() const {
       jslogs("FileSize");
-      return jsFileSize();
+      //return jsFileSize();
+      return dataLength;
     }
 
     void Flush() {
@@ -121,6 +139,8 @@ public:
 };
 
 bool DoTheImportThing(const char *pFile) {
+    Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE);
+
     // Create an instance of the Importer class
     Assimp::Importer importer;
 

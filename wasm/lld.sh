@@ -11,9 +11,7 @@ pushd build
 # --lto-O3 --no-entry -lc -lc++ -lc++abi -lc-printscan-long-double \
 ${WASI_SDK_HOME}/bin/wasm-ld        \
      --no-entry -lc -lc++ -lc++abi -lc-printscan-long-double \
-     --lto-O3 \
     --import-memory \
-    --gc-sections \
     --allow-undefined-file=../jslib.imports \
     -L${WASI_SDK_HOME}/share/wasi-sysroot/lib/wasm32-wasi \
     ./AssetLib/FBX/fbx.a \

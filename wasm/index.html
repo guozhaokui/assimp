@@ -270,10 +270,11 @@
     const fbx = await fetch("./res/xiepian.fbx");
     const fbxbuff = await fbx.arrayBuffer();
     let ptr = exports._malloc(fbxbuff.byteLength);
-    cpyUint8(new Uint8Array(fbxbuff), ptr);
-    debugger;
-
+    cpyUint8(ptr, new Uint8Array(fbxbuff));
+    exports.setData(ptr,fbxbuff.byteLength);
+    
     console.log(obj.instance.exports.test());  // "3" 
+    debugger;
 
   }
   init();
