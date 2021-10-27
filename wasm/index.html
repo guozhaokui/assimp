@@ -203,12 +203,14 @@
           console.log(UTF8ToString(str));
         },
         realpath(path, resolved_path) {
+          debugger;
         },
         loadFile(f){
+          console.log('loadFile', UTF8ToString(f));
           debugger;
         },
         seek(offset,origin){
-          debugger;
+          console.log('seek', offset, origin)
         },
         tell(){
           debugger;

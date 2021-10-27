@@ -4,6 +4,7 @@
 #include <assimp/IOSystem.hpp>
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/Importer.hpp> // C++ importer interface
+#include <assimp/Exporter.hpp>
 
 #define WASM_EXP(e)  __attribute__((export_name(#e)))
 
@@ -161,10 +162,14 @@ bool DoTheImportThing(const char *pFile) {
                     aiProcess_SortByPType);
 
     // If the import failed, report it
-    if (nullptr != scene) {
+    if (nullptr == scene) {
         // DoTheErrorLogging( importer.GetErrorString());
         return false;
     }
+
+	Assimp::Exporter exp;
+    exp.Export(scene,"assjson","/xx/xx");
+	//globalExporter = &exp;
 
     // Now we can access the file's contents.
     // DoTheSceneProcessing( scene);
