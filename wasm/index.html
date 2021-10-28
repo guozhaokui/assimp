@@ -18,6 +18,11 @@
   var WASI_ENOSYS = 52;
   var WASI_STDOUT_FILENO = 1;
 
+  function bufftostr(buff){
+    let dec = new TextDecoder();
+    return dec.decode(buff);
+  }
+
   var dataView;
 
   class barebonesWASI {
@@ -48,7 +53,7 @@
 
     environ_sizes_get(environCount, environBufSize) {
       debugger;
-      var view = this.getModuleMemoryDataView();
+      var view = dataView;
 
       view.setUint32(environCount, 0, !0);
       view.setUint32(environBufSize, 0, !0);
@@ -63,7 +68,7 @@
 
     args_sizes_get(argc, argvBufSize) {
       debugger;
-      var view = this.getModuleMemoryDataView();
+      var view = dataView;
 
       view.setUint32(argc, 0, !0);
       view.setUint32(argvBufSize, 0, !0);
@@ -78,23 +83,27 @@
 
     fd_fdstat_get(fd, bufPtr) {
       debugger;
-      var view = this.getModuleMemoryDataView();
+      var view = dataView;
 
-      view.setUint8(bufPtr, fd);
-      view.setUint16(bufPtr + 2, 0, !0);
-      view.setUint16(bufPtr + 4, 0, !0);
+      /*
+      filetype 
+        0 未知
+        1 blockdevice
+        2 字符设备 tty
+        3 目录节点
+        4 普通文件
+        5 datagram socket
+        6 byte-stream socket
+        7 symbolic link inode
 
-      function setBigUint64(byteOffset, value, littleEndian) {
+      */
 
-        var lowWord = value;
-        var highWord = 0;
-
-        view.setUint32(littleEndian ? 0 : 4, lowWord, littleEndian);
-        view.setUint32(littleEndian ? 4 : 0, highWord, littleEndian);
-      }
-
-      setBigUint64(bufPtr + 8, 0, !0);
-      setBigUint64(bufPtr + 8 + 8, 0, !0);
+      view.setUint32(bufPtr,4,true);  //fs_filetype。 实际是uint8，但是可能需要占用4个字节    TODO 要根据实际类型
+      view.setUint32(bufPtr+4,0xffffffff,true);//fs_flags 实际是uint16. 可能要占用4个字节
+      view.setUint32(bufPtr+8,0xffffffff,true); // fs_rights_base low
+      view.setUint32(bufPtr+12,0xffffffff,true);// fs_rights_base high
+      view.setUint32(bufPtr+16,0xffffffff,true); // fs_rights_inheriting low
+      view.setUint32(bufPtr+20,0xffffffff,true);// fs_rights_inheriting high
 
       return WASI_ESUCCESS;
     }
@@ -103,7 +112,7 @@
     //iovs 是一个结构：{ptr*,len}
     fd_write(fd, iovs, iovsLen, nwritten) {
       debugger;
-      var view = this.getModuleMemoryDataView();
+      var view = dataView;
 
       var written = 0;
       var bufferBytes = [];
@@ -118,27 +127,25 @@
           var ptr = iovs + i * 8;
           var buf = view.getUint32(ptr, !0);
           var bufLen = view.getUint32(ptr + 4, !0);
-
-          return new Uint8Array(this.mem.buffer, buf, bufLen);
+          return new Uint8Array( mem.buffer, buf, bufLen);
         });
-
         return buffers;
       }
 
       var buffers = getiovs(iovs, iovsLen);
       function writev(iov) {
-
         for (var b = 0; b < iov.byteLength; b++) {
-
           bufferBytes.push(iov[b]);
         }
-
         written += b;
       }
 
       buffers.forEach(writev);
-
-      if (fd === WASI_STDOUT_FILENO) console.log(String.fromCharCode.apply(null, bufferBytes));
+      //if (fd === WASI_STDOUT_FILENO) console.log(String.fromCharCode.apply(null, bufferBytes));
+      let str = bufftostr( new Uint8Array(bufferBytes));
+      let obj = JSON.parse(str);
+      console.log(obj);
+      console.log('完成')
 
       view.setUint32(nwritten, written, !0);
 
