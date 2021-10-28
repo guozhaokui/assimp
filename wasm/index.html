@@ -18,6 +18,8 @@
   var WASI_ENOSYS = 52;
   var WASI_STDOUT_FILENO = 1;
 
+  var dataView;
+
   class barebonesWASI {
     moduleInstanceExports = null;
     mem = null;
@@ -97,6 +99,8 @@
       return WASI_ESUCCESS;
     }
 
+    // 写文件
+    //iovs 是一个结构：{ptr*,len}
     fd_write(fd, iovs, iovsLen, nwritten) {
       debugger;
       var view = this.getModuleMemoryDataView();
@@ -169,8 +173,20 @@
       return WASI_ENOSYS;
     }
 
-    path_open(p) {
+    // 打开路径。
+    // path 是char*
+    // 返回0表示成功。 打开的fd保存在retptr0中
+    path_open(fd,dirflags,path,path_len,oflags, fs_rights_base, fs_rights_inheriting, fdflags, retptr0) {
       debugger;
+      let pathstr = UTF8ToString(path);
+      if(pathstr.length!=path_len){
+        console.error('路径长度不对');
+        return -1;
+      }
+      console.log('打开路径',pathstr);
+      let fdtest = 201;// 临时fd。 如果成功的话，后面会stat 201， write 201
+      dataView.setUint32(retptr0,fdtest,true);
+      return 0;
     }
 
     path_filestat_get(p1, p2) { debugger; }
@@ -260,6 +276,7 @@
     });
     //polyfill
     setInstance(obj.instance,mem)
+    dataView = new DataView(mem.buffer);
     let exports = obj.instance.exports;
 
     wasiPolyfill.setModuleInstance(obj.instance, mem);

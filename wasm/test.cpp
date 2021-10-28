@@ -5,6 +5,7 @@
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/Importer.hpp> // C++ importer interface
 #include <assimp/Exporter.hpp>
+#include <wasi/libc.h>
 
 #define WASM_EXP(e)  __attribute__((export_name(#e)))
 
@@ -140,6 +141,10 @@ public:
 };
 
 bool DoTheImportThing(const char *pFile) {
+    // 先注册文件
+    __wasilibc_register_preopened_fd(101, "xx");
+
+
     Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE);
 
     // Create an instance of the Importer class
