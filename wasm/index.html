@@ -23,7 +23,20 @@
     return dec.decode(buff);
   }
 
+  var obj; //WebAssembly.WebAssemblyInstantiatedSource
   var dataView;
+  function updateDataView(){
+    if(!dataView){
+      dataView=new DataView(mem.buffer);
+      setInstance(obj.instance, mem);
+      return;
+    }
+
+    if(dataView.buffer!=mem.buffer){
+      dataView=new DataView(mem.buffer);
+      setInstance(obj.instance, mem);
+    }
+  }
 
   class barebonesWASI {
     moduleInstanceExports = null;
@@ -53,6 +66,7 @@
 
     environ_sizes_get(environCount, environBufSize) {
       debugger;
+      updateDataView();
       var view = dataView;
 
       view.setUint32(environCount, 0, !0);
@@ -68,6 +82,7 @@
 
     args_sizes_get(argc, argvBufSize) {
       debugger;
+      updateDataView();
       var view = dataView;
 
       view.setUint32(argc, 0, !0);
@@ -83,6 +98,7 @@
 
     fd_fdstat_get(fd, bufPtr) {
       debugger;
+      updateDataView();
       var view = dataView;
 
       /*
@@ -112,6 +128,7 @@
     //iovs 是一个结构：{ptr*,len}
     fd_write(fd, iovs, iovsLen, nwritten) {
       debugger;
+      updateDataView();
       var view = dataView;
 
       var written = 0;
@@ -185,6 +202,7 @@
     // 返回0表示成功。 打开的fd保存在retptr0中
     path_open(fd,dirflags,path,path_len,oflags, fs_rights_base, fs_rights_inheriting, fdflags, retptr0) {
       debugger;
+      updateDataView();
       let pathstr = UTF8ToString(path);
       if(pathstr.length!=path_len){
         console.error('路径长度不对');
@@ -215,7 +233,7 @@
   async function init() {
     const response = await fetch("./build/assimp.wasm");
     const buffer = await response.arrayBuffer();
-    const obj = await WebAssembly.instantiate(buffer, {
+    obj = await WebAssembly.instantiate(buffer, {
       JSRT: {
         log: (str, len, f1, f2, f3) => {
           let arr = mem.buffer.slice(str, str + len);
