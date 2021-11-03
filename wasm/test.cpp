@@ -1,72 +1,92 @@
 #include <assimp/postprocess.h> // Post processing flags
 #include <assimp/scene.h> // Output data structure
+#include <wasi/libc.h>
+#include <wasi/api.h>
+#include <assimp/DefaultLogger.hpp>
+#include <assimp/Exporter.hpp>
 #include <assimp/IOStream.hpp>
 #include <assimp/IOSystem.hpp>
-#include <assimp/DefaultLogger.hpp>
 #include <assimp/Importer.hpp> // C++ importer interface
-#include <assimp/Exporter.hpp>
-#include <wasi/libc.h>
 
-#define WASM_EXP(e)  __attribute__((export_name(#e)))
+#define WASM_EXP(e) __attribute__((export_name(#e)))
 
 #define __WASM_SYSCALL_NAME(name) \
     __attribute__((__import_module__("JSRT"), __import_name__(#name)))
 
-bool DoTheImportThing(const char *pFile);
+bool DoTheImportThing(const char *pFile, const char* outfile);
 
-void* data=nullptr;
-int dataLength=0;
+void *data = nullptr;
+int dataLength = 0;
 
 extern "C" {
-// 导入函数
-void jslogs(const char *str) __WASM_SYSCALL_NAME(logs);
-void jslog(const char *str, int len, float f1, float f2, float f3) __WASM_SYSCALL_NAME(log);
+    // 导入函数
+    void jslogs(const char *str) __WASM_SYSCALL_NAME(logs);
+    void jslog(const char *str, int len, float f1, float f2, float f3) __WASM_SYSCALL_NAME(log);
 
-void jsLoadFile(const char* f) __WASM_SYSCALL_NAME(loadFile);;
-aiReturn jsSeek(size_t pOffset, aiOrigin pOrigin) __WASM_SYSCALL_NAME(seek);
-size_t jsTell() __WASM_SYSCALL_NAME(tell);
-size_t jsFileSize() __WASM_SYSCALL_NAME(filesize);
-void jsFlush() __WASM_SYSCALL_NAME(flush);
+    int jsLoadFile(const char *f) __WASM_SYSCALL_NAME(loadFile);
+    aiReturn jsSeek(int id, size_t pOffset, aiOrigin pOrigin) __WASM_SYSCALL_NAME(seek);
+    // -1表示不存在
+    size_t jsFileSize(int id) __WASM_SYSCALL_NAME(filesize);
+    // 读取文件id，到outptr中，请求长度为len，outptr已经分配好了，返回实际读的大小
+    size_t jsReadFile(int id, int start,void* outptr, int len) __WASM_SYSCALL_NAME(readFile);
+    size_t jsTell(int id) __WASM_SYSCALL_NAME(tell);
+    void jsFlush(int id) __WASM_SYSCALL_NAME(flush);
 
-void test() WASM_EXP(test) {
-    DoTheImportThing("/test/tt.fbx");
+
+    void importToJSON(char* file, char* outfile) WASM_EXP(importToJSON) {
+        DoTheImportThing(file, outfile);
+    }
+
+    void *_malloc(int sz) WASM_EXP(_malloc) {
+        void *ptr = malloc(sz);
+        return ptr;
+    }
+
+    void _free(void *ptr) WASM_EXP(_free) {
+        free(ptr);
+    }
+
+    void setData(int ptr, int length) WASM_EXP(setData) {
+        data = (void *)ptr;
+        dataLength = length;
+    }
+
+    void regPath(char* path, int id) WASM_EXP(regPath){
+        __wasilibc_register_preopened_fd(id, path);
+    }
+
+    void* _new__wasi_filestat_t() WASM_EXP(_new__wasi_filestat_t){
+        return malloc(sizeof(__wasi_filestat_t));
+    }
+    void _set__wasi_filestat_t_info(void* ptr, int filetype, int filesize) WASM_EXP(_set__wasi_filestat_t_info){
+        __wasi_filestat_t* p = (__wasi_filestat_t*)ptr;
+        p->filetype = filetype;
+        p->size=filesize;
+    }
+
 }
-
-void*  _malloc(int sz) WASM_EXP(_malloc) {
-    void* ptr = malloc(sz);
-    return ptr;
-}
-
-void _free(void* ptr) WASM_EXP(_free) {
-    free(ptr);
-}
-
-void setData(int ptr, int length) WASM_EXP(setData) {
-    data =(void*) ptr;
-    dataLength=length;
-}
-}
-
-
 
 // My own implementation of IOStream
 class MyIOStream : public Assimp::IOStream {
     friend class MyIOSystem;
 
-public:    
+public:
     std::string file;
-    char* pBuffer;
+    char *pBuffer;
     int length;
+    int fid=0;
 private:
-    char* pCurPtr;
-    int   leftData;
+    //char *pCurPtr;
+    int dataPtr=0;
+
 protected:
     // Constructor protected for private usage by MyIOSystem
-    MyIOStream(const char* pf) {
-      file.assign(pf);
-      jsLoadFile(pf);
-      leftData = dataLength;
-      pCurPtr=(char*)data;
+    MyIOStream(const char *pf) {
+        file.assign(pf);
+        fid = jsLoadFile(pf);
+        length = jsFileSize(fid);
+        //leftData = dataLength;
+        //pCurPtr = (char *)data;
     }
 
 public:
@@ -75,15 +95,19 @@ public:
 
     // psize 是每个元素的大小。pcount是多少个元素
     size_t Read(void *pvBuffer, size_t pSize, size_t pCount) {
-      //jslogs((char*)pvBuffer);
-      //return 0;
-      int n = pSize*pCount;
-      int rlen = n<leftData?n:leftData;
-      memcpy(pvBuffer, pCurPtr, rlen);
-      pCurPtr+=rlen;
-      leftData-=rlen;
-      if(leftData<0)leftData=0;
-      return rlen;
+        if(dataPtr>=length) return 0;
+        int read = jsReadFile(fid, dataPtr, pvBuffer, pSize*pCount);
+        dataPtr+=read;
+        return read;
+        /*
+        int n = pSize * pCount;
+        int rlen = n < leftData ? n : leftData;
+        memcpy(pvBuffer, pCurPtr, rlen);
+        pCurPtr += rlen;
+        leftData -= rlen;
+        if (leftData < 0) leftData = 0;
+        return rlen;
+        */
     }
 
     size_t Write(const void *pvBuffer, size_t pSize, size_t pCount) {
@@ -91,23 +115,23 @@ public:
     }
 
     aiReturn Seek(size_t pOffset, aiOrigin pOrigin) {
-      jslogs("seek");
-      return jsSeek(pOffset, pOrigin);
+        jslogs("seek");
+        return jsSeek(fid, pOffset, pOrigin);
     }
 
     size_t Tell() const {
-      jslogs("tell");
-        return jsTell();
+        jslogs("tell");
+        return jsTell(fid);
     }
 
     size_t FileSize() const {
-      jslogs("FileSize");
-      //return jsFileSize();
-      return dataLength;
+        jslogs("FileSize");
+        return jsFileSize(fid);
+        //return dataLength;
     }
 
     void Flush() {
-        jsFlush();
+        jsFlush(fid);
     }
 };
 
@@ -140,10 +164,10 @@ public:
     void Close(Assimp::IOStream *pFile) { delete pFile; }
 };
 
-bool DoTheImportThing(const char *pFile) {
+bool DoTheImportThing(const char *pFile, const char* outfile) {
     // 先注册文件
-    __wasilibc_register_preopened_fd(101, "xx");
-
+    //__wasilibc_register_preopened_fd(101, "xx");
+    //__wasilibc_register_preopened_fd(102, "test");
 
     Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE);
 
@@ -155,7 +179,6 @@ bool DoTheImportThing(const char *pFile) {
 
     // put my custom IO handling in place
     importer.SetIOHandler(new MyIOSystem());
-
 
     // And have it read the given file with some example postprocessing
     // Usually - if speed is not the most important aspect for you - you'll
@@ -172,9 +195,9 @@ bool DoTheImportThing(const char *pFile) {
         return false;
     }
 
-	Assimp::Exporter exp;
-    exp.Export(scene,"assjson","/xx/xx");
-	//globalExporter = &exp;
+    Assimp::Exporter exp;
+    exp.Export(scene, "assjson", outfile);
+    // globalExporter = &exp;
 
     // Now we can access the file's contents.
     // DoTheSceneProcessing( scene);
